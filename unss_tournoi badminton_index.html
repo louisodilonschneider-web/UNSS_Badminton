@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNSS – Gestionnaire de Tournois</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --blue: #1a3fa8;
+    --blue-dark: #122d80;
+    --blue-light: #2a52c4;
+    --orange: #f47c20;
+    --orange-dark: #d4660e;
+    --white: #ffffff;
+    --gray-bg: #f0f3fa;
+    --gray-light: #e2e8f4;
+    --gray-mid: #b0bdd8;
+    --gray-text: #4a5578;
+    --green: #22c55e;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --teal: #0ea5e9;
+    --shadow: 0 4px 20px rgba(26,63,168,0.13);
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Barlow',sans-serif;background:var(--gray-bg);color:#1e2a4a;min-height:100vh;}
+
+  /* HEADER */
+  header{background:var(--blue);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.18);}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo-text{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:800;letter-spacing:1px;}
+  .logo-text span{color:var(--orange);}
+  .logo-sub{font-size:0.78rem;opacity:0.75;margin-top:-2px;}
+  .badge-year{background:var(--orange);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:5px 14px;border-radius:20px;}
+
+  /* NAV */
+  nav{background:var(--blue-dark);display:flex;gap:0;overflow-x:auto;}
+  nav button{background:none;border:none;color:rgba(255,255,255,0.72);font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:600;letter-spacing:.5px;padding:12px 22px;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
+  nav button:hover{color:#fff;background:rgba(255,255,255,0.06);}
+  nav button.active{color:#fff;border-bottom:3px solid var(--orange);background:rgba(255,255,255,0.07);}
+
+  /* MAIN */
+  main{max-width:1200px;margin:0 auto;padding:24px 20px 60px;}
+
+  /* PAGE TITLE */
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:1.9rem;font-weight:800;color:var(--blue);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+  .page-title .dot{width:8px;height:8px;border-radius:50%;background:var(--orange);display:inline-block;}
+
+  /* CARDS */
+  .card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 24px;margin-bottom:18px;}
+  .card-title{font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;color:var(--blue);margin-bottom:14px;border-left:4px solid var(--orange);padding-left:10px;}
+
+  /* FORM */
+  .form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+  .form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px;}
+  label{font-size:0.78rem;font-weight:600;color:var(--gray-text);text-transform:uppercase;letter-spacing:.5px;}
+  input,select{border:1.5px solid var(--gray-light);border-radius:6px;padding:8px 11px;font-family:'Barlow',sans-serif;font-size:0.92rem;color:#1e2a4a;outline:none;transition:border .2s;}
+  input:focus,select:focus{border-color:var(--blue);}
+
+  /* BUTTONS */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.3px;border:none;cursor:pointer;transition:all .15s;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:var(--blue-light);}
+  .btn-orange{background:var(--orange);color:#fff;}
+  .btn-orange:hover{background:var(--orange-dark);}
+  .btn-green{background:var(--green);color:#fff;}
+  .btn-green:hover{background:#16a34a;}
+  .btn-red{background:var(--red);color:#fff;}
+  .btn-red:hover{background:#dc2626;}
+  .btn-ghost{background:var(--gray-light);color:var(--blue);}
+  .btn-ghost:hover{background:var(--gray-mid);}
+  .btn-sm{padding:5px 12px;font-size:0.88rem;}
+
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;font-size:0.9rem;}
+  th{background:var(--blue);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.95rem;padding:9px 12px;text-align:left;}
+  td{padding:8px 12px;border-bottom:1px solid var(--gray-light);}
+  tr:hover td{background:var(--gray-bg);}
+
+  /* BADGES */
+  .badge{display:inline-block;padding:3px 9px;border-radius:12px;font-size:0.78rem;font-weight:700;font-family:'Barlow Condensed',sans-serif;}
+  .badge-a{background:#dcfce7;color:#15803d;}
+  .badge-b{background:#dbeafe;color:#1d4ed8;}
+  .badge-c{background:#ede9fe;color:#6d28d9;}
+  .badge-orange{background:#ffedd5;color:#c2410c;}
+  .badge-gray{background:var(--gray-light);color:var(--gray-text);}
+  .badge-winner{background:#fef08a;color:#854d0e;}
+
+  /* POOL GRID */
+  .pools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+  .pool-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .pool-header{background:var(--blue);color:#fff;padding:10px 16px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.05rem;display:flex;justify-content:space-between;align-items:center;}
+  .pool-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
+  .pool-table th{background:var(--blue-dark);color:#fff;padding:6px 10px;font-size:0.82rem;font-family:'Barlow Condensed',sans-serif;}
+  .pool-table td{padding:6px 10px;border-bottom:1px solid var(--gray-light);}
+
+  /* BRACKET */
+  .bracket-wrap{overflow-x:auto;padding-bottom:10px;}
+  .bracket{display:flex;gap:0;align-items:stretch;}
+  .bracket-round{display:flex;flex-direction:column;justify-content:space-around;min-width:180px;padding:0 10px;}
+  .bracket-round-title{text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--blue);font-size:0.95rem;margin-bottom:10px;background:var(--gray-light);border-radius:6px;padding:4px;}
+  .match-box{background:#fff;border:2px solid var(--gray-light);border-radius:8px;padding:8px 10px;margin:6px 0;position:relative;min-width:160px;}
+  .match-box.winner-top{border-color:var(--orange);}
+  .match-player{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:3px 0;}
+  .match-player:first-child{border-bottom:1px solid var(--gray-light);}
+  .match-player-name{font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;}
+  .match-score-input{width:38px;padding:2px 4px;text-align:center;border:1px solid var(--gray-mid);border-radius:4px;font-size:0.85rem;}
+  .match-winner-flag{font-size:0.7rem;background:var(--orange);color:#fff;border-radius:3px;padding:1px 4px;font-weight:700;}
+  .connector{border-top:2px solid var(--gray-mid);border-right:2px solid var(--gray-mid);border-bottom:2px solid var(--gray-mid);width:10px;align-self:stretch;}
+
+  /* PARTENAIRE EN OR */
+  .grid-partner{display:grid;gap:6px;}
+  .partner-cell{border:2px solid var(--gray-light);border-radius:6px;padding:6px 10px;text-align:center;font-size:0.82rem;cursor:pointer;transition:all .2s;background:#fff;}
+  .partner-cell.done{background:#dcfce7;border-color:#22c55e;color:#15803d;}
+  .partner-cell.playing{background:#fef9c3;border-color:#ca8a04;}
+  .partner-cell.self{background:var(--blue);color:#fff;border-color:var(--blue);cursor:default;}
+
+  /* COMPETITION LIST */
+  .comp-list{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+  .comp-item{background:#fff;border:2px solid var(--gray-light);border-radius:8px;padding:10px 16px;cursor:pointer;transition:all .2s;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;color:var(--blue);}
+  .comp-item.active{border-color:var(--orange);background:#fff8f2;color:var(--orange-dark);}
+  .comp-item:hover{border-color:var(--blue);}
+  .comp-add{border-style:dashed;color:var(--gray-text);}
+
+  /* SCORE LIVE */
+  .score-live{display:flex;align-items:center;gap:10px;}
+  .score-live input{width:52px;text-align:center;font-size:1.3rem;font-weight:700;padding:6px;border:2px solid var(--gray-light);border-radius:6px;}
+
+  /* TABS */
+  .tabs{display:flex;gap:0;border-bottom:2px solid var(--gray-light);margin-bottom:18px;}
+  .tab{padding:9px 20px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;color:var(--gray-text);transition:all .2s;}
+  .tab.active{color:var(--blue);border-bottom-color:var(--orange);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  /* STATUS ICONS */
+  .status-done::before{content:'✓ ';color:var(--green);}
+  .status-pending::before{content:'◉ ';color:var(--orange);}
+  .status-upcoming::before{content:'○ ';color:var(--gray-mid);}
+
+  /* RANKING */
+  .rank-1{background:#fef9c3;}
+  .rank-2{background:#f1f5f9;}
+  .rank-3{background:#fdf2ee;}
+  .medal{font-size:1.1rem;}
+
+  /* RESPONSIVE */
+  @media(max-width:600px){
+    .form-row{flex-direction:column;}
+    main{padding:12px 8px 50px;}
+    .bracket-round{min-width:150px;}
+  }
+
+  /* PRINT / PDF */
+  @media print{
+    nav,header button,.btn{display:none!important;}
+    body{background:#fff;}
+    .card{box-shadow:none;border:1px solid #ccc;}
+  }
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal{background:#fff;border-radius:12px;padding:24px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+  .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:800;color:var(--blue);margin-bottom:16px;}
+  .hidden{display:none!important;}
+
+  /* ALERT */
+  .alert{padding:10px 16px;border-radius:7px;font-size:0.9rem;margin-bottom:12px;}
+  .alert-info{background:#dbeafe;color:#1e40af;}
+  .alert-success{background:#dcfce7;color:#15803d;}
+  .alert-warn{background:#fef9c3;color:#854d0e;}
+
+  /* SEPARATORS */
+  hr{border:none;border-top:1px solid var(--gray-light);margin:18px 0;}
+
+  .flex{display:flex;} .gap-2{gap:8px;} .gap-3{gap:12px;} .items-center{align-items:center;} .justify-between{justify-content:space-between;} .flex-wrap{flex-wrap:wrap;} .mt-2{margin-top:8px;} .mt-3{margin-top:12px;} .mb-2{margin-bottom:8px;} .mb-3{margin-bottom:12px;} .w-full{width:100%;}
+  .text-sm{font-size:0.85rem;} .text-gray{color:var(--gray-text);} .font-bold{font-weight:700;} .text-orange{color:var(--orange);} .text-blue{color:var(--blue);} .text-green{color:var(--green);} .text-red{color:var(--red);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div>
+      <div class="logo-text"><span>UN</span>SS</div>
+      <div class="logo-sub">Badminton – Gestion des Tournois</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="btn btn-ghost btn-sm" onclick="exportPDF()">📄 Export PDF</button>
+    <span class="badge-year">2024–2028</span>
+  </div>
+</header>
+
+<nav id="main-nav">
+  <button class="active" onclick="showPage('competitions')">🏆 Compétitions</button>
+  <button onclick="showPage('players')">👥 Participants</button>
+  <button onclick="showPage('poules')">⬡ Poules</button>
+  <button onclick="showPage('tableau')">🎯 Tableau</button>
+  <button onclick="showPage('academique')">🏫 Académique</button>
+  <button onclick="showPage('partenaire')">🤝 Partenaire en Or</button>
+  <button onclick="showPage('classement')">📊 Classement</button>
+</nav>
+
+<main id="app-main">
+
+<!-- ==================== PAGE COMPETITIONS ==================== -->
+<div id="page-competitions" class="page">
+  <div class="page-title"><span class="dot"></span>Mes Compétitions</div>
+
+  <div class="card">
+    <div class="card-title">Créer une nouvelle compétition</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nom de la compétition</label>
+        <input id="comp-name" type="text" placeholder="Ex: Tournoi District Badminton">
+      </div>
+      <div class="form-group">
+        <label>Sport / Discipline</label>
+        <input id="comp-sport" type="text" placeholder="Badminton" value="Badminton">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input id="comp-date" type="date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Type de victoire</label>
+        <select id="comp-victory-type">
+          <option value="points">Par points</option>
+          <option value="sets">Par sets</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label id="comp-victory-label">Points pour gagner</label>
+        <input id="comp-victory-value" type="number" value="21" min="1">
+      </div>
+      <div class="form-group">
+        <label>Format</label>
+        <select id="comp-format">
+          <option value="individuel">Individuel</option>
+          <option value="equipe">Par équipes</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Lieu</label>
+        <input id="comp-lieu" type="text" placeholder="Gymnase J. Moulin">
+      </div>
+    </div>
+    <button class="btn btn-primary mt-3" onclick="createCompetition()">➕ Créer la compétition</button>
+  </div>
+
+  <div id="competitions-list"></div>
+</div>
+
+<!-- ==================== PAGE PLAYERS ==================== -->
+<div id="page-players" class="page hidden">
+  <div class="page-title"><span class="dot"></span>Participants</div>
+  <div id="no-comp-msg-players" class="alert alert-warn">Sélectionnez ou créez d'abord une compétition.</div>
+
+  <div id="players-section" class="hidden">
+    <div class="card">
+      <div class="card-title">Ajouter un participant</div>
+      <div class="form-row">
+        <div class="form-group"><label>Prénom</label><input id="p-prenom" type="text" placeholder="Prénom"></div>
+        <div class="form-group"><label>Nom</label><input id="p-nom" type="text" placeholder="Nom"></div>
+        <div class="form-group"><label>Établissement</label><input id="p-etab" type="text" placeholder="Lycée Hugo"></div>
+        <div class="form-group" id="p-equipe-group"><label>Équipe</label><input id="p-equipe" type="text" placeholder="Équipe A"></div>
+        <div class="form-group"><label>Niveau (1–5)</label><input id="p-niveau" type="number" min="1" max="5" value="3"></div>
+      </div>
+      <div class="mt-2 flex gap-2 flex-wrap">
+        <button class="btn btn-primary" onclick="addPlayer()">➕ Ajouter</button>
+        <button class="btn btn-ghost" onclick="importPlayersModal()">📋 Import rapide</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title flex justify-between items-center">
+        <span>Liste des participants (<span id="player-count">0</span>)</span>
+        <button class="btn btn-red btn-sm" onclick="clearPlayers()">🗑 Vider</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>#</th><th>Prénom</th><th>Nom</th><th>Établissement</th><th>Équipe</th><th>Niveau</th><th>Action</th></tr></thead>
+          <tbody id="players-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE POULES ==================== -->
+<div id="page-poules" class="page hidden">
+  <div class="page-title"><span class="dot"></span>Phase de Poules</div>
+  <div id="no-comp-msg-poules" class="alert alert-warn">Sélectionnez d'abord une compétition.</div>
+
+  <div id="poules-section" class="hidden">
+    <div class="card">
+      <div class="card-title">Configuration des poules</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Répartition</label>
+          <select id="poule-repartition">
+            <option value="manuelle">Manuelle (par l'enseignant)</option>
+            <option value="heterogene">Hétérogène (par niveau)</option>
+            <option value="aleatoire">Aléatoire</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Taille max. par poule</label>
+          <select id="poule-size">
+            <option value="3">3 élèves</option>
+            <option value="4" selected>4 élèves</option>
+          </select>
+        </div>
+        <div class="form-group" id="poule-select-players-group">
+          <label>Sélection participants</label>
+          <select id="poule-players-select" multiple style="height:80px"></select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="generatePoules()">🔄 Générer les poules</button>
+    </div>
+
+    <div id="poules-grid" class="pools-grid mb-3"></div>
+
+    <div id="poules-ranking-card" class="card hidden">
+      <div class="card-title">Classement de poules</div>
+      <div id="poules-ranking-table"></div>
+      <div class="mt-3">
+        <button class="btn btn-orange" onclick="showPage('tableau'); generateBracketFromPoules()">➡️ Générer le tableau depuis ces poules</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE TABLEAU ==================== -->
+<div id="page-tableau" class="page hidden">
+  <div class="page-title"><span class="dot"></span>Tableau (Élimination)</div>
+  <div id="no-comp-msg-tableau" class="alert alert-warn">Sélectionnez d'abord une compétition.</div>
+
+  <div id="tableau-section" class="hidden">
+    <div class="card">
+      <div class="card-title">Configuration du tableau</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Source des participants</label>
+          <select id="bracket-source">
+            <option value="poules">Depuis les poules (classement)</option>
+            <option value="manuel">Placement manuel</option>
+            <option value="aleatoire">Aléatoire</option>
+            <option value="niveau">Par niveau</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tableau avec consolante</label>
+          <select id="bracket-consolante">
+            <option value="yes">Oui (classement complet)</option>
+            <option value="no">Non (élimination directe)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="generateBracket()">🎯 Générer le tableau</button>
+    </div>
+
+    <div id="bracket-container"></div>
+
+    <div id="bracket-final-ranking" class="card hidden">
+      <div class="card-title">🏆 Classement final du tableau</div>
+      <div id="bracket-final-table"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE ACADÉMIQUE ==================== -->
+<div id="page-academique" class="page hidden">
+  <div class="page-title"><span class="dot"></span>Rencontres Académiques</div>
+
+  <div class="card">
+    <div class="card-title">Configuration académique</div>
+    <div class="alert alert-info">Jusqu'à 3 départements, 6 élèves chacun. Poules hétérogènes dispersant les meilleurs et les élèves du même département.</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Département 1</label>
+        <input id="dep1-name" type="text" value="Dept A" placeholder="Nom du département">
+      </div>
+      <div class="form-group">
+        <label>Département 2</label>
+        <input id="dep2-name" type="text" value="Dept B" placeholder="Nom du département">
+      </div>
+      <div class="form-group">
+        <label>Département 3</label>
+        <input id="dep3-name" type="text" value="Dept C" placeholder="Nom du département">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Élèves / département (max 6)</label>
+        <input id="acad-per-dept" type="number" min="2" max="6" value="6">
+      </div>
+      <div class="form-group">
+        <label>Points pour gagner</label>
+        <input id="acad-points" type="number" value="21">
+      </div>
+    </div>
+
+    <div id="acad-players-section">
+      <div class="card-title mt-3">Saisie des joueurs par département</div>
+      <div id="acad-dept-forms"></div>
+    </div>
+    <div class="mt-3 flex gap-2 flex-wrap">
+      <button class="btn btn-ghost" onclick="generateAcadDeptForms()">🔄 Préparer les formulaires</button>
+      <button class="btn btn-primary" onclick="generateAcadPoules()">⬡ Générer les poules académiques</button>
+    </div>
+  </div>
+
+  <div id="acad-poules-container"></div>
+  <div id="acad-bracket-container" class="mt-3"></div>
+</div>
+
+<!-- ==================== PAGE PARTENAIRE EN OR ==================== -->
+<div id="page-partenaire" class="page hidden">
+  <div class="page-title"><span class="dot"></span>Partenaire en Or 🤝</div>
+
+  <div class="card">
+    <div class="card-title">Configuration</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre d'échanges à réussir</label>
+        <input id="po-echanges" type="number" value="10" min="1">
+      </div>
+      <div class="form-group">
+        <label>Durée totale (minutes, 0 = sans limite)</label>
+        <input id="po-duree" type="number" value="20" min="0">
+      </div>
+    </div>
+    <div class="alert alert-info">Les élèves doivent réaliser <strong id="po-echanges-display">10</strong> échanges avec chaque camarade. Succès = 10 pts chacun, Échec = 1 pt chacun.</div>
+    <button class="btn btn-primary" onclick="startPartenaire()">▶️ Démarrer</button>
+  </div>
+
+  <div id="partenaire-game" class="hidden">
+    <div class="card flex justify-between items-center flex-wrap gap-2">
+      <div>
+        <div class="card-title mb-2">Situation en cours</div>
+        <div class="text-sm text-gray">Temps restant : <span id="po-timer" class="font-bold text-orange">--:--</span></div>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="stopPartenaire()">⏹ Terminer</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Vue globale des paires</div>
+      <div id="partenaire-matrix"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Saisir un résultat</div>
+      <div class="form-row">
+        <div class="form-group"><label>Élève 1</label><select id="po-p1"></select></div>
+        <div class="form-group"><label>Élève 2</label><select id="po-p2"></select></div>
+        <div class="form-group"><label>Résultat</label>
+          <select id="po-result">
+            <option value="success">✅ Réussi (10 pts chacun)</option>
+            <option value="fail">❌ Échoué (1 pt chacun)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-green" onclick="recordPartenaire()">💾 Enregistrer</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Scores</div>
+      <div id="partenaire-scores"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE CLASSEMENT ==================== -->
+<div id="page-classement" class="page hidden">
+  <div class="page-title"><span class="dot"></span>Classements Généraux</div>
+  <div id="no-comp-msg-class" class="alert alert-warn">Sélectionnez d'abord une compétition.</div>
+
+  <div id="classement-section" class="hidden">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'tab-ind')">Individuel</div>
+      <div class="tab" onclick="switchTab(this,'tab-eq')">Par équipe</div>
+    </div>
+    <div id="tab-ind" class="tab-content active">
+      <div class="card">
+        <div class="card-title">Classement individuel</div>
+        <div id="ranking-individual"></div>
+      </div>
+    </div>
+    <div id="tab-eq" class="tab-content">
+      <div class="card">
+        <div class="card-title">Classement par équipe</div>
+        <div id="ranking-equipe"></div>
+      </div>
+    </div>
+    <button class="btn btn-orange mt-3" onclick="exportPDF()">📄 Exporter en PDF</button>
+  </div>
+</div>
+
+</main>
+
+<!-- MODAL IMPORT -->
+<div id="modal-import" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">Import rapide de participants</div>
+    <p class="text-sm text-gray mb-3">Collez une liste (une ligne par joueur) : Prénom Nom Établissement Niveau<br>Ex: <em>Jean Dupont "Lycée Hugo" 3</em></p>
+    <textarea id="import-textarea" rows="8" style="width:100%;padding:8px;border:1.5px solid var(--gray-light);border-radius:6px;font-size:0.88rem;resize:vertical"></textarea>
+    <div class="mt-3 flex gap-2">
+      <button class="btn btn-primary" onclick="processImport()">✅ Importer</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-import')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRM -->
+<div id="modal-confirm" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" id="modal-confirm-title">Confirmation</div>
+    <p id="modal-confirm-msg" class="mb-3"></p>
+    <div class="flex gap-2">
+      <button class="btn btn-red" id="modal-confirm-ok">Confirmer</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========================== STATE ==========================
+let state = {
+  competitions: [],
+  currentCompId: null,
+  // per competition:
+  // comp.players = [{id, prenom, nom, etab, equipe, niveau}]
+  // comp.poules = [{id, name, players:[playerId], matches:[{p1,p2,s1,s2,done}], standings:[]}]
+  // comp.bracket = {rounds:[[{p1,p2,s1,s2,winner,id}]], consolante:...}
+  // partenaire
+  partenaire: {active:false, echanges:10, duree:20, pairs:{}, scores:{}, timer:null, elapsed:0}
+};
+
+function getComp(id){return state.competitions.find(c=>c.id===(id||state.currentCompId));}
+function curComp(){return getComp(state.currentCompId);}
+
+// ========================== PAGES ==========================
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById('page-'+name).classList.remove('hidden');
+  document.querySelectorAll('#main-nav button').forEach((b,i)=>{
+    const pages=['competitions','players','poules','tableau','academique','partenaire','classement'];
+    b.classList.toggle('active',pages[i]===name);
+  });
+  if(name==='players') renderPlayers();
+  if(name==='classement') renderClassements();
+  if(name==='poules') renderPoulesPage();
+  if(name==='tableau') renderTableauPage();
+}
+
+function switchTab(el,tabId){
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const parent=el.closest('.page')||el.closest('main');
+  parent.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+}
+
+// ========================== COMPETITIONS ==========================
+function createCompetition(){
+  const name=document.getElementById('comp-name').value.trim();
+  if(!name){alert('Donnez un nom à la compétition.');return;}
+  const comp={
+    id:Date.now(),
+    name,
+    sport:document.getElementById('comp-sport').value||'Badminton',
+    date:document.getElementById('comp-date').value,
+    victoryType:document.getElementById('comp-victory-type').value,
+    victoryValue:parseInt(document.getElementById('comp-victory-value').value)||21,
+    format:document.getElementById('comp-format').value,
+    lieu:document.getElementById('comp-lieu').value,
+    players:[],
+    poules:[],
+    bracket:null,
+    acadData:null
+  };
+  state.competitions.push(comp);
+  state.currentCompId=comp.id;
+  renderCompetitions();
+  document.getElementById('comp-name').value='';
+  save();
+}
+
+function selectCompetition(id){
+  state.currentCompId=id;
+  renderCompetitions();
+  showPage('players');
+  save();
+}
+
+function deleteCompetition(id){
+  state.competitions=state.competitions.filter(c=>c.id!==id);
+  if(state.currentCompId===id) state.currentCompId=null;
+  renderCompetitions();
+  save();
+}
+
+function renderCompetitions(){
+  const el=document.getElementById('competitions-list');
+  if(!state.competitions.length){
+    el.innerHTML='<div class="alert alert-info">Aucune compétition créée. Utilisez le formulaire ci-dessus.</div>';
+    return;
+  }
+  el.innerHTML=state.competitions.map(c=>`
+    <div class="card" style="border-left:4px solid ${c.id===state.currentCompId?'var(--orange)':'var(--gray-light)'}">
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <div class="font-bold text-blue" style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem">${c.name}</div>
+          <div class="text-sm text-gray">${c.sport} · ${c.date||'Date non définie'} · ${c.lieu||''} · ${c.players.length} participants</div>
+          <div class="text-sm mt-2">
+            <span class="badge badge-b">${c.format}</span>
+            <span class="badge badge-a">${c.victoryType==='points'?c.victoryValue+' pts':c.victoryValue+' sets'} pour gagner</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-primary btn-sm" onclick="selectCompetition(${c.id})">📂 Sélectionner</button>
+          <button class="btn btn-red btn-sm" onclick="deleteCompetition(${c.id})">🗑</button>
+        </div>
+      </div>
+      ${c.id===state.currentCompId?'<div class="badge badge-orange mt-2">✓ Compétition active</div>':''}
+    </div>
+  `).join('');
+}
+
+// ========================== PLAYERS ==========================
+function checkCompSelected(secId,msgId){
+  const hasComp=!!state.currentCompId;
+  document.getElementById(msgId)?.classList.toggle('hidden',hasComp);
+  document.getElementById(secId)?.classList.toggle('hidden',!hasComp);
+  return hasComp;
+}
+
+function addPlayer(){
+  if(!checkCompSelected('players-section','no-comp-msg-players')) return;
+  const comp=curComp();
+  const prenom=document.getElementById('p-prenom').value.trim();
+  const nom=document.getElementById('p-nom').value.trim();
+  if(!prenom||!nom){alert('Prénom et nom requis.');return;}
+  comp.players.push({
+    id:Date.now()+Math.random(),
+    prenom,nom,
+    etab:document.getElementById('p-etab').value.trim(),
+    equipe:document.getElementById('p-equipe').value.trim(),
+    niveau:parseInt(document.getElementById('p-niveau').value)||3
+  });
+  ['p-prenom','p-nom','p-etab','p-equipe'].forEach(id=>document.getElementById(id).value='');
+  renderPlayers();
+  save();
+}
+
+function removePlayer(id){
+  const comp=curComp();
+  comp.players=comp.players.filter(p=>p.id!==id);
+  renderPlayers();
+  save();
+}
+
+function clearPlayers(){
+  if(!curComp()) return;
+  if(confirm('Vider tous les participants ?')){
+    curComp().players=[];
+    renderPlayers();
+    save();
+  }
+}
+
+function renderPlayers(){
+  if(!checkCompSelected('players-section','no-comp-msg-players')) return;
+  const comp=curComp();
+  document.getElementById('player-count').textContent=comp.players.length;
+  const showEquipe=comp.format==='equipe';
+  document.getElementById('p-equipe-group').style.display=showEquipe?'':'none';
+  const tbody=document.getElementById('players-tbody');
+  tbody.innerHTML=comp.players.map((p,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${p.prenom}</td>
+      <td>${p.nom}</td>
+      <td>${p.etab||'–'}</td>
+      <td>${p.equipe||'–'}</td>
+      <td><span class="badge ${['','badge-a','badge-a','badge-b','badge-c','badge-orange'][p.niveau]||'badge-gray'}">${p.niveau}</span></td>
+      <td><button class="btn btn-red btn-sm" onclick="removePlayer(${p.id})">✕</button></td>
+    </tr>
+  `).join('');
+  // update poule player select
+  const sel=document.getElementById('poule-players-select');
+  if(sel){
+    sel.innerHTML=comp.players.map(p=>`<option value="${p.id}">${p.prenom} ${p.nom}</option>`).join('');
+    for(let i=0;i<sel.options.length;i++) sel.options[i].selected=true;
+  }
+}
+
+function importPlayersModal(){
+  document.getElementById('modal-import').classList.remove('hidden');
+}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+
+function processImport(){
+  if(!curComp()) return;
+  const text=document.getElementById('import-textarea').value;
+  const lines=text.split('\n').filter(l=>l.trim());
+  lines.forEach(line=>{
+    const parts=line.trim().split(/\s+/);
+    if(parts.length>=2){
+      curComp().players.push({
+        id:Date.now()+Math.random(),
+        prenom:parts[0],
+        nom:parts[1],
+        etab:parts[2]||'',
+        equipe:'',
+        niveau:parseInt(parts[3])||3
+      });
+    }
+  });
+  renderPlayers();
+  closeModal('modal-import');
+  save();
+}
+
+// ========================== POULES ==========================
+function renderPoulesPage(){
+  if(!checkCompSelected('poules-section','no-comp-msg-poules')) return;
+  renderPlayers();
+  renderExistingPoules();
+}
+
+function generatePoules(){
+  const comp=curComp();
+  if(!comp||comp.players.length<2){alert('Pas assez de participants.');return;}
+  const repartition=document.getElementById('poule-repartition').value;
+  const size=parseInt(document.getElementById('poule-size').value);
+
+  // Get selected players
+  const sel=document.getElementById('poule-players-select');
+  const selectedIds=Array.from(sel.selectedOptions).map(o=>parseFloat(o.value));
+  let players=comp.players.filter(p=>selectedIds.includes(p.id));
+  if(!players.length) players=[...comp.players];
+
+  let sorted=[...players];
+  if(repartition==='heterogene'){
+    sorted.sort((a,b)=>b.niveau-a.niveau);
+    // snake distribution
+    const pouleCount=Math.ceil(sorted.length/size);
+    const pools=Array.from({length:pouleCount},()=>[]);
+    sorted.forEach((p,i)=>{
+      const row=Math.floor(i/pouleCount);
+      const col=row%2===0?i%pouleCount:pouleCount-1-i%pouleCount;
+      pools[col].push(p);
+    });
+    comp.poules=pools.map((pp,i)=>makePoule(pp,i));
+  } else if(repartition==='aleatoire'){
+    sorted=shuffleArr([...players]);
+    const pools=chunkArray(sorted,size);
+    comp.poules=pools.map((pp,i)=>makePoule(pp,i));
+  } else {
+    // manual: just chunk in order
+    const pools=chunkArray(sorted,size);
+    comp.poules=pools.map((pp,i)=>makePoule(pp,i));
+  }
+  renderExistingPoules();
+  save();
+}
+
+function makePoule(players,idx){
+  const alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const matches=[];
+  for(let i=0;i<players.length;i++){
+    for(let j=i+1;j<players.length;j++){
+      matches.push({id:Date.now()+Math.random(),p1:players[i].id,p2:players[j].id,s1:'',s2:'',done:false});
+    }
+  }
+  return {id:Date.now()+Math.random(),name:'Poule '+alpha[idx],players:players.map(p=>p.id),matches,standings:[]};
+}
+
+function renderExistingPoules(){
+  const comp=curComp();
+  if(!comp) return;
+  const grid=document.getElementById('poules-grid');
+  if(!comp.poules.length){grid.innerHTML='<div class="alert alert-info">Aucune poule générée.</div>';return;}
+
+  grid.innerHTML=comp.poules.map((poule,pi)=>{
+    const players=poule.players.map(id=>comp.players.find(p=>p.id===id)).filter(Boolean);
+    const standings=computePouleStandings(poule,comp);
+    return `<div class="pool-card">
+      <div class="pool-header"><span>${poule.name}</span><span class="text-sm" style="opacity:.75">${players.length} joueurs</span></div>
+      <div style="padding:10px">
+        <table class="pool-table">
+          <thead><tr><th>#</th><th>Joueur</th><th>J</th><th>V</th><th>D</th><th>Pts</th></tr></thead>
+          <tbody>${standings.map((s,i)=>`<tr>
+            <td><span class="medal">${['🥇','🥈','🥉','4️⃣'][i]||i+1}</span></td>
+            <td>${s.player.prenom} ${s.player.nom}</td>
+            <td>${s.j}</td><td>${s.v}</td><td>${s.d}</td>
+            <td class="font-bold">${s.pts}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+        <hr>
+        <div class="card-title" style="font-size:.85rem;margin-top:8px">Matches</div>
+        ${poule.matches.map(m=>{
+          const p1=comp.players.find(p=>p.id===m.p1);
+          const p2=comp.players.find(p=>p.id===m.p2);
+          if(!p1||!p2) return '';
+          return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:.82rem">
+            <span style="flex:1">${p1.prenom} ${p1.nom}</span>
+            <input class="match-score-input" type="number" min="0" value="${m.s1}" 
+              onchange="updatePouleScore(${comp.id},'${poule.id}','${m.id}','s1',this.value)">
+            <span>–</span>
+            <input class="match-score-input" type="number" min="0" value="${m.s2}"
+              onchange="updatePouleScore(${comp.id},'${poule.id}','${m.id}','s2',this.value)">
+            <span style="flex:1;text-align:right">${p2.prenom} ${p2.nom}</span>
+            ${m.done?'<span class="badge badge-a">✓</span>':''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  // show ranking button
+  document.getElementById('poules-ranking-card').classList.remove('hidden');
+  renderPoulesRanking();
+}
+
+function updatePouleScore(compId,pouleId,matchId,field,value){
+  const comp=getComp(compId);
+  const poule=comp.poules.find(p=>p.id==pouleId);
+  const match=poule.matches.find(m=>m.id==matchId);
+  match[field]=parseInt(value)||0;
+  const cv=curComp()?.victoryValue||21;
+  if((match.s1>=cv||match.s2>=cv)&&match.s1!==match.s2) match.done=true;
+  renderExistingPoules();
+  save();
+}
+
+function computePouleStandings(poule,comp){
+  const stats={};
+  poule.players.forEach(id=>{stats[id]={j:0,v:0,d:0,pts:0,diff:0};});
+  poule.matches.filter(m=>m.done).forEach(m=>{
+    if(stats[m.p1]){stats[m.p1].j++;stats[m.p1].diff+=m.s1-m.s2;}
+    if(stats[m.p2]){stats[m.p2].j++;stats[m.p2].diff+=m.s2-m.s1;}
+    if(m.s1>m.s2){
+      if(stats[m.p1]){stats[m.p1].v++;stats[m.p1].pts+=3;}
+      if(stats[m.p2]){stats[m.p2].d++;stats[m.p2].pts+=0;}
+    } else if(m.s2>m.s1){
+      if(stats[m.p2]){stats[m.p2].v++;stats[m.p2].pts+=3;}
+      if(stats[m.p1]){stats[m.p1].d++;stats[m.p1].pts+=0;}
+    }
+  });
+  return poule.players.map(id=>{
+    const p=comp.players.find(pl=>pl.id===id)||{prenom:'?',nom:''};
+    return {player:p,...stats[id]||{j:0,v:0,d:0,pts:0,diff:0}};
+  }).sort((a,b)=>b.pts-a.pts||b.diff-a.diff);
+}
+
+function renderPoulesRanking(){
+  const comp=curComp();
+  if(!comp) return;
+  const allStandings=[];
+  comp.poules.forEach(poule=>{
+    const standings=computePouleStandings(poule,comp);
+    standings.forEach((s,rank)=>{
+      allStandings.push({...s,poule:poule.name,rank:rank+1});
+    });
+  });
+  // Sort by rank then points
+  allStandings.sort((a,b)=>a.rank-b.rank||b.pts-a.pts);
+  const el=document.getElementById('poules-ranking-table');
+  el.innerHTML=`<div style="overflow-x:auto"><table>
+    <thead><tr><th>Rang</th><th>Joueur</th><th>Poule</th><th>J</th><th>V</th><th>D</th><th>Pts</th></tr></thead>
+    <tbody>${allStandings.map((s,i)=>`<tr class="${['rank-1','rank-2','rank-3',''][Math.min(i,3)]}">
+      <td>${['🥇','🥈','🥉'][i]||i+1}</td>
+      <td>${s.player.prenom} ${s.player.nom}</td>
+      <td><span class="badge badge-b">${s.poule}</span></td>
+      <td>${s.j}</td><td>${s.v}</td><td>${s.d}</td>
+      <td class="font-bold">${s.pts}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ========================== BRACKET ==========================
+function renderTableauPage(){
+  if(!checkCompSelected('tableau-section','no-comp-msg-tableau')) return;
+}
+
+function generateBracketFromPoules(){
+  generateBracket('poules');
+}
+
+function generateBracket(forceSource){
+  const comp=curComp();
+  if(!comp){alert('Aucune compétition.');return;}
+  const source=forceSource||document.getElementById('bracket-source').value;
+  let players=[];
+
+  if(source==='poules'){
+    const allStandings=[];
+    comp.poules.forEach(poule=>{
+      const standings=computePouleStandings(poule,comp);
+      standings.forEach((s,rank)=>allStandings.push({...s,poule:poule.name,rank:rank+1}));
+    });
+    // Interleave: 1st poule A, 1st poule B, 2nd poule A, ...
+    const byRank={};
+    allStandings.forEach(s=>{
+      if(!byRank[s.rank]) byRank[s.rank]=[];
+      byRank[s.rank].push(s.player);
+    });
+    Object.keys(byRank).sort((a,b)=>a-b).forEach(r=>players.push(...byRank[r]));
+  } else if(source==='aleatoire'){
+    players=shuffleArr([...comp.players]);
+  } else if(source==='niveau'){
+    players=[...comp.players].sort((a,b)=>b.niveau-a.niveau);
+  } else {
+    players=[...comp.players];
+  }
+
+  if(players.length<2){alert('Pas assez de joueurs.');return;}
+
+  const consolante=document.getElementById('bracket-consolante').value==='yes';
+  comp.bracket=buildBracket(players,consolante);
+  renderBracket();
+  save();
+}
+
+function nextPow2(n){let p=1;while(p<n)p*=2;return p;}
+
+function buildBracket(players,consolante){
+  const n=players.length;
+  const slots=nextPow2(n);
+  const byes=slots-n;
+  // Seed players: 1 vs last, 2 vs second-to-last...
+  const seeded=Array(slots).fill(null);
+  // Fill evenly
+  for(let i=0;i<players.length;i++) seeded[i]=players[i];
+  // Arrange bracket (1 vs last pattern)
+  const arranged=arrangeBracket(seeded);
+  // Build rounds
+  const rounds=[];
+  let current=[];
+  for(let i=0;i<arranged.length;i+=2){
+    const p1=arranged[i];
+    const p2=arranged[i+1];
+    const match={id:Date.now()+Math.random(),p1:p1?.id||null,p2:p2?.id||null,
+      p1name:p1?p1.prenom+' '+p1.nom:'BYE',p2name:p2?p2.prenom+' '+p2.nom:'BYE',
+      s1:'',s2:'',winner:null,loser:null,bye:(p1&&!p2)||(!p1&&p2)};
+    if(match.bye){match.winner=p1?p1.id:p2?.id;match.s1=1;match.s2=0;match.done=true;}
+    current.push(match);
+  }
+  rounds.push(current);
+  // Generate subsequent rounds as placeholders
+  let prev=current;
+  while(prev.length>1){
+    const next=[];
+    for(let i=0;i<prev.length;i+=2){
+      next.push({id:Date.now()+Math.random(),p1:null,p2:null,p1name:'À déterminer',p2name:'À déterminer',s1:'',s2:'',winner:null,loser:null,done:false,fromMatches:[prev[i]?.id,prev[i+1]?.id]});
+    }
+    rounds.push(next);
+    prev=next;
+  }
+  // Consolante brackets placeholder
+  let consolanteRounds=null;
+  if(consolante){
+    consolanteRounds=buildConsolanteStructure(rounds);
+  }
+  return {rounds,consolanteRounds,players};
+}
+
+function arrangeBracket(seeded){
+  // Create 1 vs last, 2 vs 2nd-to-last pattern
+  const arr=[];
+  const mid=seeded.length/2;
+  for(let i=0;i<mid;i++){
+    arr.push(seeded[i]);
+    arr.push(seeded[seeded.length-1-i]);
+  }
+  return arr;
+}
+
+function buildConsolanteStructure(mainRounds){
+  // Consolante gets losers from round 1
+  if(mainRounds[0].length<2) return null;
+  const consolRound1=mainRounds[0].map(m=>({
+    id:Date.now()+Math.random(),
+    fromLosers:true,refMatch:m.id,
+    p1:null,p2:null,p1name:'Perdant',p2name:'Perdant',
+    s1:'',s2:'',winner:null,done:false
+  }));
+  const rounds=[consolRound1];
+  let prev=consolRound1;
+  while(prev.length>1){
+    const next=[];
+    for(let i=0;i<prev.length;i+=2){
+      next.push({id:Date.now()+Math.random(),p1:null,p2:null,p1name:'À déterminer',p2name:'À déterminer',s1:'',s2:'',winner:null,done:false});
+    }
+    rounds.push(next);
+    prev=next;
+  }
+  return rounds;
+}
+
+function renderBracket(){
+  const comp=curComp();
+  if(!comp?.bracket) return;
+  checkCompSelected('tableau-section','no-comp-msg-tableau');
+  const container=document.getElementById('bracket-container');
+  propagateBracketWinners(comp);
+
+  const roundNames=getRoundNames(comp.bracket.rounds.length);
+  let html=`<div class="card"><div class="card-title">Tableau principal</div><div class="bracket-wrap"><div class="bracket">`;
+  comp.bracket.rounds.forEach((round,ri)=>{
+    html+=`<div class="bracket-round"><div class="bracket-round-title">${roundNames[ri]||'Tour '+(ri+1)}</div>`;
+    round.forEach(match=>{
+      const p1=comp.players.find(p=>p.id===match.p1);
+      const p2=comp.players.find(p=>p.id===match.p2);
+      const p1name=p1?p1.prenom+' '+p1.nom:(match.p1name||'À déterminer');
+      const p2name=p2?p2.prenom+' '+p2.nom:(match.p2name||'À déterminer');
+      const w1=match.winner===match.p1;
+      const w2=match.winner===match.p2;
+      html+=`<div class="match-box">
+        <div class="match-player ${w1?'font-bold':''}">
+          <span class="match-player-name">${p1name}${w1?' 🏆':''}</span>
+          <input class="match-score-input" type="number" min="0" value="${match.s1||''}" 
+            onchange="updateBracketScore('${match.id}','s1',this.value,'main')" ${match.done&&!match.fromMatches?'':''}/>
+        </div>
+        <div class="match-player ${w2?'font-bold':''}">
+          <span class="match-player-name">${p2name}${w2?' 🏆':''}</span>
+          <input class="match-score-input" type="number" min="0" value="${match.s2||''}"
+            onchange="updateBracketScore('${match.id}','s2',this.value,'main')"/>
+        </div>
+        ${match.bye?'<div class="text-sm text-gray" style="font-size:.7rem">Bye</div>':''}
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  html+=`</div></div></div>`;
+
+  // Consolante
+  if(comp.bracket.consolanteRounds){
+    const cRoundNames=getRoundNames(comp.bracket.consolanteRounds.length,'C');
+    html+=`<div class="card mt-3"><div class="card-title">Tableau consolante (classement complet)</div><div class="bracket-wrap"><div class="bracket">`;
+    comp.bracket.consolanteRounds.forEach((round,ri)=>{
+      html+=`<div class="bracket-round"><div class="bracket-round-title" style="background:#ede9fe">${cRoundNames[ri]}</div>`;
+      round.forEach(match=>{
+        html+=`<div class="match-box" style="border-color:#ede9fe">
+          <div class="match-player"><span class="match-player-name">${match.p1name||'Perdant'}</span>
+            <input class="match-score-input" type="number" min="0" value="${match.s1||''}"
+              onchange="updateBracketScore('${match.id}','s1',this.value,'consol')"/>
+          </div>
+          <div class="match-player"><span class="match-player-name">${match.p2name||'Perdant'}</span>
+            <input class="match-score-input" type="number" min="0" value="${match.s2||''}"
+              onchange="updateBracketScore('${match.id}','s2',this.value,'consol')"/>
+          </div>
+        </div>`;
+      });
+      html+=`</div>`;
+    });
+    html+=`</div></div></div>`;
+  }
+
+  container.innerHTML=html;
+  renderBracketFinalRanking();
+}
+
+function getRoundNames(total,prefix){
+  const suffixes=['Final','Demi-Finale','Quart de Finale','8ème','16ème','32ème'];
+  const names=[];
+  for(let i=total-1;i>=0;i--){
+    names.unshift((prefix?prefix+' ':'')+( suffixes[i]||'Tour '+(total-i)));
+  }
+  return names;
+}
+
+function updateBracketScore(matchId,field,value,type){
+  const comp=curComp();
+  if(!comp?.bracket) return;
+  const rounds=type==='consol'?comp.bracket.consolanteRounds:comp.bracket.rounds;
+  let match;
+  for(const round of rounds){
+    match=round.find(m=>m.id==matchId);
+    if(match) break;
+  }
+  if(!match) return;
+  match[field]=parseInt(value)||0;
+  const cv=comp.victoryValue||21;
+  if((match.s1>=cv||match.s2>=cv)&&match.s1!==match.s2){
+    match.done=true;
+    match.winner=match.s1>match.s2?match.p1:match.p2;
+    match.loser=match.s1>match.s2?match.p2:match.p1;
+  }
+  propagateBracketWinners(comp);
+  renderBracket();
+  save();
+}
+
+function propagateBracketWinners(comp){
+  if(!comp.bracket) return;
+  // Propagate winners through main bracket
+  comp.bracket.rounds.forEach((round,ri)=>{
+    if(ri===0) return;
+    round.forEach((match,mi)=>{
+      const prev=comp.bracket.rounds[ri-1];
+      const m1=prev[mi*2];
+      const m2=prev[mi*2+1];
+      if(m1?.winner){
+        match.p1=m1.winner;
+        const p=comp.players.find(p=>p.id===m1.winner);
+        match.p1name=p?p.prenom+' '+p.nom:'Gagnant';
+      }
+      if(m2?.winner){
+        match.p2=m2.winner;
+        const p=comp.players.find(p=>p.id===m2.winner);
+        match.p2name=p?p.prenom+' '+p.nom:'Gagnant';
+      }
+    });
+  });
+  // Populate consolante round 1 with losers
+  if(comp.bracket.consolanteRounds?.length){
+    const r0=comp.bracket.consolanteRounds[0];
+    r0.forEach((cm,i)=>{
+      const mainMatch=comp.bracket.rounds[0][i];
+      if(mainMatch?.loser){
+        // alternate p1/p2
+        if(i%2===0){
+          cm.p1=mainMatch.loser;
+          const p=comp.players.find(p=>p.id===mainMatch.loser);
+          cm.p1name=p?p.prenom+' '+p.nom:'Perdant';
+        } else {
+          cm.p2=mainMatch.loser;
+          const p=comp.players.find(p=>p.id===mainMatch.loser);
+          cm.p2name=p?p.prenom+' '+p.nom:'Perdant';
+        }
+      }
+    });
+    // pair up consolante losers into matches
+    for(let i=0;i<r0.length-1;i+=2){
+      if(r0[i].p1&&!r0[i].p2&&r0[i+1]?.p1){
+        r0[i].p2=r0[i+1].p1;
+        r0[i].p2name=r0[i+1].p1name;
+      }
+    }
+  }
+}
+
+function renderBracketFinalRanking(){
+  const comp=curComp();
+  if(!comp?.bracket) return;
+  const lastRound=comp.bracket.rounds[comp.bracket.rounds.length-1];
+  const final=lastRound[0];
+  if(!final?.done) return;
+  const ranking=[];
+  const w=comp.players.find(p=>p.id===final.winner);
+  const l=comp.players.find(p=>p.id===final.loser);
+  if(w) ranking.push({pos:1,player:w});
+  if(l) ranking.push({pos:2,player:l});
+  // Consolante winner = 3rd
+  if(comp.bracket.consolanteRounds){
+    const cf=comp.bracket.consolanteRounds[comp.bracket.consolanteRounds.length-1][0];
+    if(cf?.done){
+      const cw=comp.players.find(p=>p.id===cf.winner);
+      const cl=comp.players.find(p=>p.id===cf.loser);
+      if(cw) ranking.push({pos:3,player:cw});
+      if(cl) ranking.push({pos:4,player:cl});
+    }
+  }
+  if(!ranking.length) return;
+  document.getElementById('bracket-final-ranking').classList.remove('hidden');
+  document.getElementById('bracket-final-table').innerHTML=`
+    <table><thead><tr><th>Place</th><th>Joueur</th><th>Établissement</th></tr></thead>
+    <tbody>${ranking.map(r=>`<tr class="${['rank-1','rank-2','rank-3',''][r.pos-1]||''}">
+      <td>${['🥇','🥈','🥉','4️⃣'][r.pos-1]||r.pos}</td>
+      <td>${r.player.prenom} ${r.player.nom}</td>
+      <td>${r.player.etab||'–'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+// ========================== ACADÉMIQUE ==========================
+function generateAcadDeptForms(){
+  const d1=document.getElementById('dep1-name').value||'Dept A';
+  const d2=document.getElementById('dep2-name').value||'Dept B';
+  const d3=document.getElementById('dep3-name').value||'Dept C';
+  const perDept=parseInt(document.getElementById('acad-per-dept').value)||6;
+  const container=document.getElementById('acad-dept-forms');
+  container.innerHTML=[d1,d2,d3].map((dept,di)=>`
+    <div class="card mb-3">
+      <div class="card-title">${dept}</div>
+      <div id="acad-dept-${di}-rows">
+        ${Array.from({length:perDept},(_,i)=>`
+          <div class="form-row">
+            <div class="form-group"><label>Prénom</label><input class="acad-prenom" data-dept="${di}" type="text" placeholder="Prénom ${i+1}"></div>
+            <div class="form-group"><label>Nom</label><input class="acad-nom" data-dept="${di}" type="text" placeholder="Nom ${i+1}"></div>
+            <div class="form-group"><label>Niveau</label><input class="acad-niveau" data-dept="${di}" type="number" min="1" max="5" value="3"></div>
+          </div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function generateAcadPoules(){
+  const depts=[0,1,2].map(i=>({
+    name:[document.getElementById('dep1-name').value,document.getElementById('dep2-name').value,document.getElementById('dep3-name').value][i]||'Dept '+(i+1),
+    players:[]
+  }));
+  document.querySelectorAll('.acad-prenom').forEach(inp=>{
+    const di=parseInt(inp.dataset.dept);
+    const nom=inp.closest('.form-row').querySelector('.acad-nom').value.trim();
+    const niveau=parseInt(inp.closest('.form-row').querySelector('.acad-niveau').value)||3;
+    if(inp.value.trim()&&nom){
+      depts[di].players.push({id:Date.now()+Math.random(),prenom:inp.value.trim(),nom,dept:depts[di].name,niveau,equipe:depts[di].name});
+    }
+  });
+  const allPlayers=depts.flatMap(d=>d.players);
+  if(allPlayers.length<3){alert('Ajoutez au moins 3 joueurs.');return;}
+
+  // Heterogeneous poules: mix departments and levels
+  const poules=createHeterogeneousPoules(allPlayers,4);
+  renderAcadPoules(poules,allPlayers);
+}
+
+function createHeterogeneousPoules(players,maxSize){
+  const sorted=[...players].sort((a,b)=>b.niveau-a.niveau);
+  const n=Math.ceil(sorted.length/maxSize);
+  const pools=Array.from({length:n},()=>[]);
+  // Snake fill to mix levels AND departments
+  sorted.forEach((p,i)=>{
+    const row=Math.floor(i/n);
+    const col=row%2===0?i%n:n-1-i%n;
+    // Check if dept already in pool, if so rotate
+    let targetCol=col;
+    let tries=0;
+    while(pools[targetCol].some(pp=>pp.dept===p.dept)&&tries<n){
+      targetCol=(targetCol+1)%n;
+      tries++;
+    }
+    pools[targetCol].push(p);
+  });
+  return pools;
+}
+
+function renderAcadPoules(pools,players){
+  const alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const container=document.getElementById('acad-poules-container');
+  container.innerHTML=`<div class="card"><div class="card-title">Poules académiques</div><div class="pools-grid">
+    ${pools.map((pool,pi)=>`
+      <div class="pool-card">
+        <div class="pool-header"><span>Poule ${alpha[pi]}</span></div>
+        <div style="padding:10px">
+          <table class="pool-table">
+            <thead><tr><th>Joueur</th><th>Département</th><th>Niv.</th></tr></thead>
+            <tbody>${pool.map(p=>`<tr><td>${p.prenom} ${p.nom}</td><td><span class="badge badge-b">${p.dept}</span></td><td>${p.niveau}</td></tr>`).join('')}</tbody>
+          </table>
+          <div class="card-title mt-2" style="font-size:.82rem">Matches</div>
+          ${genMatchesHtml(pool)}
+        </div>
+      </div>`).join('')}
+  </div></div>`;
+}
+
+function genMatchesHtml(pool){
+  let html='';
+  for(let i=0;i<pool.length;i++){
+    for(let j=i+1;j<pool.length;j++){
+      html+=`<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;font-size:.8rem">
+        <span style="flex:1">${pool[i].prenom} ${pool[i].nom}</span>
+        <input class="match-score-input" type="number" min="0" placeholder="0">
+        <span>–</span>
+        <input class="match-score-input" type="number" min="0" placeholder="0">
+        <span style="flex:1;text-align:right">${pool[j].prenom} ${pool[j].nom}</span>
+      </div>`;
+    }
+  }
+  return html;
+}
+
+// ========================== PARTENAIRE EN OR ==========================
+document.getElementById('po-echanges').addEventListener('input',function(){
+  document.getElementById('po-echanges-display').textContent=this.value;
+});
+
+let poTimer=null;
+function startPartenaire(){
+  const comp=curComp();
+  if(!comp||comp.players.length<2){alert('Sélectionnez une compétition avec au moins 2 joueurs.');return;}
+  state.partenaire={
+    active:true,
+    echanges:parseInt(document.getElementById('po-echanges').value)||10,
+    duree:parseInt(document.getElementById('po-duree').value)||0,
+    pairs:{},
+    scores:{},
+    elapsed:0
+  };
+  comp.players.forEach(p=>{state.partenaire.scores[p.id]=0;});
+  document.getElementById('partenaire-game').classList.remove('hidden');
+  // populate selects
+  const p1=document.getElementById('po-p1');
+  const p2=document.getElementById('po-p2');
+  const opts=comp.players.map(p=>`<option value="${p.id}">${p.prenom} ${p.nom}</option>`).join('');
+  p1.innerHTML=opts;
+  p2.innerHTML=opts;
+  if(comp.players.length>1) p2.selectedIndex=1;
+
+  if(state.partenaire.duree>0){
+    let remaining=state.partenaire.duree*60;
+    document.getElementById('po-timer').textContent=formatTime(remaining);
+    if(poTimer) clearInterval(poTimer);
+    poTimer=setInterval(()=>{
+      remaining--;
+      document.getElementById('po-timer').textContent=formatTime(remaining);
+      if(remaining<=0){clearInterval(poTimer);alert('Temps écoulé !');stopPartenaire();}
+    },1000);
+  } else {
+    document.getElementById('po-timer').textContent='∞';
+  }
+  renderPartenaireMatrix();
+  renderPartenaireScores();
+}
+
+function stopPartenaire(){
+  if(poTimer) clearInterval(poTimer);
+  state.partenaire.active=false;
+  renderPartenaireMatrix();
+  renderPartenaireScores();
+}
+
+function recordPartenaire(){
+  const comp=curComp();
+  if(!comp) return;
+  const p1=document.getElementById('po-p1').value;
+  const p2=document.getElementById('po-p2').value;
+  if(p1===p2){alert('Sélectionnez deux joueurs différents.');return;}
+  const key=[p1,p2].sort().join('-');
+  if(state.partenaire.pairs[key]){alert('Ces joueurs ont déjà joué ensemble !');return;}
+  const result=document.getElementById('po-result').value;
+  state.partenaire.pairs[key]={p1,p2,result,time:Date.now()};
+  const pts=result==='success'?10:1;
+  state.partenaire.scores[p1]=(state.partenaire.scores[p1]||0)+pts;
+  state.partenaire.scores[p2]=(state.partenaire.scores[p2]||0)+pts;
+
+  // Check if anyone finished (played with everyone)
+  const n=comp.players.length;
+  comp.players.forEach(p=>{
+    const played=comp.players.filter(op=>op.id!==p.id&&state.partenaire.pairs[[p.id,op.id].sort().join('-')]).length;
+    if(played===n-1) setTimeout(()=>alert(`🎉 ${p.prenom} ${p.nom} a joué avec tous ses camarades !`),100);
+  });
+
+  renderPartenaireMatrix();
+  renderPartenaireScores();
+}
+
+function renderPartenaireMatrix(){
+  const comp=curComp();
+  if(!comp) return;
+  const players=comp.players;
+  const n=players.length;
+  let html=`<div style="overflow-x:auto"><table style="font-size:.78rem;border-collapse:collapse">
+    <thead><tr><th style="padding:4px 8px;background:var(--blue);color:#fff;"></th>
+    ${players.map(p=>`<th style="padding:4px 8px;background:var(--blue);color:#fff;">${p.prenom}</th>`).join('')}</tr></thead>
+    <tbody>`;
+  players.forEach((p1,i)=>{
+    html+=`<tr><td style="padding:4px 8px;font-weight:700;background:var(--blue-dark);color:#fff">${p1.prenom}</td>`;
+    players.forEach((p2,j)=>{
+      if(i===j){html+=`<td class="partner-cell self">–</td>`;return;}
+      const key=[p1.id,p2.id].sort().join('-');
+      const pair=state.partenaire.pairs[key];
+      let cls='partner-cell';
+      let txt='○';
+      if(pair){cls+=' done';txt=pair.result==='success'?'✅':'❌';}
+      html+=`<td class="${cls}">${txt}</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  document.getElementById('partenaire-matrix').innerHTML=html;
+}
+
+function renderPartenaireScores(){
+  const comp=curComp();
+  if(!comp) return;
+  const scores=Object.entries(state.partenaire.scores)
+    .map(([id,pts])=>({player:comp.players.find(p=>p.id==id),pts}))
+    .filter(s=>s.player)
+    .sort((a,b)=>b.pts-a.pts);
+  document.getElementById('partenaire-scores').innerHTML=`
+    <table><thead><tr><th>Rang</th><th>Joueur</th><th>Établissement</th><th>Points</th><th>Paires jouées</th></tr></thead>
+    <tbody>${scores.map((s,i)=>`<tr class="${['rank-1','rank-2','rank-3',''][i]||''}">
+      <td>${['🥇','🥈','🥉'][i]||i+1}</td>
+      <td>${s.player.prenom} ${s.player.nom}</td>
+      <td>${s.player.etab||'–'}</td>
+      <td class="font-bold">${s.pts}</td>
+      <td>${countPairs(s.player.id,comp.players.length-1)}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function countPairs(playerId,total){
+  const done=Object.keys(state.partenaire.pairs).filter(k=>k.includes(playerId)).length;
+  return `${done}/${total}`;
+}
+
+// ========================== CLASSEMENTS ==========================
+function renderClassements(){
+  if(!checkCompSelected('classement-section','no-comp-msg-class')) return;
+  const comp=curComp();
+  if(!comp) return;
+
+  // Individual: merge poule + bracket
+  const indScores={};
+  comp.players.forEach(p=>{indScores[p.id]={player:p,wins:0,losses:0,pts:0,src:[]};});
+
+  // From poules
+  comp.poules.forEach(poule=>{
+    const standings=computePouleStandings(poule,comp);
+    standings.forEach(s=>{
+      if(indScores[s.player.id]){
+        indScores[s.player.id].wins+=s.v;
+        indScores[s.player.id].losses+=s.d;
+        indScores[s.player.id].pts+=s.pts;
+        indScores[s.player.id].src.push(poule.name);
+      }
+    });
+  });
+
+  const sorted=Object.values(indScores).sort((a,b)=>b.pts-a.pts||b.wins-a.wins);
+  document.getElementById('ranking-individual').innerHTML=`
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Rang</th><th>Joueur</th><th>Établissement</th><th>V</th><th>D</th><th>Pts</th><th>Poules</th></tr></thead>
+      <tbody>${sorted.map((s,i)=>`<tr class="${['rank-1','rank-2','rank-3',''][i]||''}">
+        <td>${['🥇','🥈','🥉'][i]||i+1}</td>
+        <td>${s.player.prenom} ${s.player.nom}</td>
+        <td>${s.player.etab||'–'}</td>
+        <td>${s.wins}</td><td>${s.losses}</td>
+        <td class="font-bold">${s.pts}</td>
+        <td>${s.src.map(n=>`<span class="badge badge-b">${n}</span>`).join(' ')}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+
+  // Teams
+  if(comp.format==='equipe'){
+    const teams={};
+    comp.players.forEach(p=>{
+      const eq=p.equipe||'Sans équipe';
+      if(!teams[eq]) teams[eq]={name:eq,pts:0,wins:0,losses:0};
+      teams[eq].pts+=(indScores[p.id]?.pts||0);
+      teams[eq].wins+=(indScores[p.id]?.wins||0);
+      teams[eq].losses+=(indScores[p.id]?.losses||0);
+    });
+    const teamSorted=Object.values(teams).sort((a,b)=>b.pts-a.pts);
+    document.getElementById('ranking-equipe').innerHTML=`
+      <table><thead><tr><th>Rang</th><th>Équipe</th><th>V</th><th>D</th><th>Pts totaux</th></tr></thead>
+      <tbody>${teamSorted.map((t,i)=>`<tr class="${['rank-1','rank-2','rank-3',''][i]||''}">
+        <td>${['🥇','🥈','🥉'][i]||i+1}</td>
+        <td class="font-bold">${t.name}</td>
+        <td>${t.wins}</td><td>${t.losses}</td><td class="font-bold">${t.pts}</td>
+      </tr>`).join('')}</tbody></table>`;
+  } else {
+    document.getElementById('ranking-equipe').innerHTML='<div class="alert alert-info">Activez le format par équipe dans la compétition.</div>';
+  }
+}
+
+// ========================== PDF EXPORT ==========================
+function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const comp=curComp();
+  const title=comp?`${comp.name} – ${comp.sport}`:'UNSS – Export';
+
+  // Header
+  doc.setFillColor(26,63,168);
+  doc.rect(0,0,210,20,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica','bold');
+  doc.text('UNSS',14,13);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.text(title,40,13);
+  doc.text(new Date().toLocaleDateString('fr-FR'),170,13);
+
+  let y=30;
+  doc.setTextColor(26,63,168);
+  doc.setFontSize(13);
+  doc.setFont('helvetica','bold');
+  doc.text('Classement Général',14,y);
+  y+=8;
+
+  // Players table
+  if(comp){
+    doc.setFontSize(9);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(30,42,74);
+
+    const indScores={};
+    comp.players.forEach(p=>{indScores[p.id]={player:p,wins:0,losses:0,pts:0};});
+    comp.poules.forEach(poule=>{
+      computePouleStandings(poule,comp).forEach(s=>{
+        if(indScores[s.player.id]){
+          indScores[s.player.id].wins+=s.v;
+          indScores[s.player.id].losses+=s.d;
+          indScores[s.player.id].pts+=s.pts;
+        }
+      });
+    });
+    const sorted=Object.values(indScores).sort((a,b)=>b.pts-a.pts);
+
+    // Header row
+    doc.setFillColor(26,63,168);
+    doc.rect(14,y,182,7,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    ['#','Prénom','Nom','Établissement','V','D','Pts'].forEach((h,i)=>{
+      doc.text(h,[14,26,56,90,140,153,165][i],y+5);
+    });
+    y+=9;
+
+    sorted.forEach((s,i)=>{
+      if(y>270){doc.addPage();y=20;}
+      doc.setTextColor(30,42,74);
+      doc.setFont('helvetica',i<3?'bold':'normal');
+      doc.setFillColor(i%2===0?245:255,i%2===0?247:255,i%2===0?250:255);
+      doc.rect(14,y-1,182,7,'F');
+      [i+1,s.player.prenom,s.player.nom,s.player.etab||'–',s.wins,s.losses,s.pts].forEach((v,ci)=>{
+        doc.text(String(v),[14,26,56,90,140,153,165][ci],y+5);
+      });
+      y+=7;
+    });
+
+    // Poules
+    if(comp.poules.length){
+      y+=8;
+      if(y>240){doc.addPage();y=20;}
+      doc.setTextColor(26,63,168);doc.setFontSize(12);doc.setFont('helvetica','bold');
+      doc.text('Résultats des Poules',14,y);y+=6;
+      comp.poules.forEach(poule=>{
+        if(y>250){doc.addPage();y=20;}
+        doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(244,124,32);
+        doc.text(poule.name,14,y);y+=5;
+        computePouleStandings(poule,comp).forEach((s,ri)=>{
+          doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(30,42,74);
+          doc.text(`${ri+1}. ${s.player.prenom} ${s.player.nom} – ${s.v}V ${s.d}D ${s.pts}pts`,18,y);y+=5;
+        });
+        y+=2;
+      });
+    }
+  }
+
+  // Footer
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setFontSize(8);doc.setTextColor(150,150,150);
+    doc.text(`UNSS – Page ${i}/${pages}`,14,292);
+  }
+
+  doc.save(`UNSS_${comp?.name||'export'}_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+// ========================== HELPERS ==========================
+function shuffleArr(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function chunkArray(arr,size){const chunks=[];for(let i=0;i<arr.length;i+=size)chunks.push(arr.slice(i,i+size));return chunks;}
+function formatTime(s){const m=Math.floor(s/60);const sec=s%60;return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
+
+// ========================== PERSIST ==========================
+function save(){
+  try{localStorage.setItem('unss_state',JSON.stringify({competitions:state.competitions,currentCompId:state.currentCompId}));}catch(e){}
+}
+function load(){
+  try{
+    const d=localStorage.getItem('unss_state');
+    if(d){const p=JSON.parse(d);state.competitions=p.competitions||[];state.currentCompId=p.currentCompId||null;}
+  }catch(e){}
+}
+
+// ========================== INIT ==========================
+load();
+document.getElementById('comp-victory-type').addEventListener('change',function(){
+  document.getElementById('comp-victory-label').textContent=this.value==='points'?'Points pour gagner':'Sets pour gagner';
+});
+document.getElementById('comp-date').value=new Date().toISOString().slice(0,10);
+renderCompetitions();
+</script>
+</body>
+</html>
